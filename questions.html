@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Someone Special ❤️</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #ffebee;
+        }
+        .question-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            border: none;
+            background: #e91e63;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #d81b60;
+        }
+    </style>
+</head>
+<body>
+    <div class="question-container" id="question-container">
+        <h2 id="question-text">The site of Ntando is still in progress. All unauthorized personal should keep away. We talk about feet here.</h2>
+        <!-- <h2 id="question-text">Happy Birthday! 🎉 Let's begin with a fun question: Which anime world would you love to live in? 🌍✨</h2> -->
+        <!-- <div id="options"></div> -->
+    </div>
+
+    <script>
+        const questions = [
+            {
+                text: "Happy Birthday! 🎉 Let's begin with a fun question: Which anime world would you love to live in? 🌍✨",
+                options: { "Isekai": 1, "Shonen": 2, "Mystical": 3 }
+            },
+            {
+                text: "Isekai? Nice choice! Which isekai anime do you vibe with the most?",
+                options: { "Re:Zero": 4, "Sword Art Online": 5, "Mushoku Tensei": 6 }
+            },
+            {
+                text: "Shonen worlds are intense! Which anime battle would you love to be part of? ⚔️",
+                options: { "Attack on Titan vs Marley": 7, "Luffy vs Kaido": 8, "Deku vs Shigaraki": 9 }
+            },
+            {
+                text: "Mystical worlds are so dreamy! Which anime location would you love to visit? ✨",
+                options: { "Spirited Away’s Bathhouse": 10, "Violet Evergarden’s Academy": 11, "Banana Fish’s New York": 12 }
+            },
+            {
+                text: "Which of these book genres do you love the most? 📚",
+                options: { "Fantasy": 13, "Thriller": 14, "Romance": 15 }
+            },
+            {
+                text: "You love thrillers! Who is the best Stephen King villain? 😈",
+                options: { "Pennywise": 16, "Carrie": 17, "Dolores Claiborne": 18 }
+            },
+            {
+                text: "How long can you read a book in one sitting? Be honest! 😆",
+                options: { "1-2 hours": 19, "3-5 hours": 20, "6+ hours": 21 }
+            },
+            {
+                text: "Which of these books would you re-read endlessly?",
+                options: { "Palace Walk": 22, "The Cruel Prince": 23, "Black Beauty": 24 }
+            },
+            {
+                text: "Which anime character would be your best friend?",
+                options: { "Levi Ackerman": 25, "Luffy": 26, "Gojo Satoru": 27 }
+            },
+            {
+                text: "Which anime duo is the most iconic?",
+                options: { "Eren & Mikasa": 28, "Luffy & Zoro": 29, "Naruto & Sasuke": 30 }
+            },
+            {
+                text: "If you could have any anime power, which one would it be?",
+                options: { "Sharingan": 31, "Titan Shifting": 32, "Haki": 33 }
+            },
+            {
+                text: "Which Studio Ghibli movie makes you feel the most nostalgic?",
+                options: { "Spirited Away": 34, "My Neighbor Totoro": 35, "Howl’s Moving Castle": 36 }
+            },
+            {
+                text: "Which book character would you go on an adventure with?",
+                options: { "Ash from Indigo Blue": 37, "Dolores Claiborne": 38, "Jude from The Cruel Prince": 39 }
+            },
+            {
+                text: "Now, for the ultimate question: Would you like to go on an anime-themed date with me? ❤️",
+                options: { "Yes!": 40, "Maybe...": 41 }
+            },
+            {
+                text: "Yay! I knew you'd say yes! Let's make it happen. ❤️🎉",
+                options: {}
+            },
+            {
+                text: "Take your time... But I'll be waiting! 😉",
+                options: {}
+            }
+        ];
+
+        function answerQuestion(answer) {
+            let currentQuestion = sessionStorage.getItem("currentQuestion") || 0;
+            currentQuestion = parseInt(currentQuestion);
+            
+            const nextIndex = questions[currentQuestion].options[answer];
+            if (nextIndex !== undefined) {
+                sessionStorage.setItem("currentQuestion", nextIndex);
+                showQuestion(nextIndex);
+            }
+        }
+
+        function showQuestion(index) {
+            const questionText = document.getElementById("question-text");
+            const optionsContainer = document.getElementById("options");
+            
+            questionText.textContent = questions[index].text;
+            optionsContainer.innerHTML = "";
+            
+            for (let option in questions[index].options) {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.onclick = () => answerQuestion(option);
+                optionsContainer.appendChild(button);
+            }
+        }
+        
+        window.onload = () => {
+            const storedQuestion = sessionStorage.getItem("currentQuestion");
+            if (storedQuestion) {
+                showQuestion(parseInt(storedQuestion));
+            } else {
+                showQuestion(0);
+            }
+        };
+    </script>
+</body>
+</html>
