@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #ffebee;
+        }
+        .dashboard-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-left: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            border: none;
+            background: #e91e63;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #d81b60;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" onclick="location.href='gamesdashboard.html'">
+        <h2>Games</h2>
+    </div>
+    <div class="dashboard-container" onclick="location.href='booksdashboard.html'">
+        <h2>Books</h2>
+    </div>
+    <div class="dashboard-container" onclick="location.href='moviesdashboard.html'">
+        <h2>Movies</h2>
+    </div>
+    <div class="dashboard-container" onclick="location.href='blogdashboard.html'">
+        <h2>Blog</h2>
+    </div>
+    <div class="dashboard-container" onclick="location.href='plannerdashboard.html'">
+        <h2>Planner</h2>
+    </div>
+</body>
+</html>
