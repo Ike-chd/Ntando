@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Side-Scrolling Shooter</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: black; }
+        canvas { display: block; }
+        h1 { color: white; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>2D Side-Scrolling Shooter</h1>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Player {
+            constructor() {
+                this.width = 50;
+                this.height = 30;
+                this.x = 100;
+                this.y = canvas.height / 2 - this.height / 2;
+                this.speed = 5;
+                this.bullets = [];
+                this.health = 100;
+            }
+            draw() {
+                ctx.fillStyle = "blue";
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                this.bullets.forEach(bullet => bullet.draw());
+            }
+            move(dir) {
+                if (dir === "up" && this.y > 0) this.y -= this.speed;
+                if (dir === "down" && this.y + this.height < canvas.height) this.y += this.speed;
+            }
+            shoot() {
+                this.bullets.push(new Bullet(this.x + this.width, this.y + this.height / 2));
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, speed = 7) {
+                this.x = x;
+                this.y = y;
+                this.width = 10;
+                this.height = 5;
+                this.speed = speed;
+            }
+            draw() {
+                this.x += this.speed;
+                ctx.fillStyle = "yellow";
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.width = 40;
+                this.height = 30;
+                this.x = canvas.width;
+                this.y = Math.random() * (canvas.height - this.height);
+                this.speed = 3;
+                this.health = 10;
+                this.bullets = [];
+            }
+            draw() {
+                this.x -= this.speed;
+                ctx.fillStyle = "red";
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                this.bullets.forEach(bullet => bullet.draw());
+            }
+            shoot() {
+                this.bullets.push(new Bullet(this.x, this.y + this.height / 2, -5));
+            }
+            takeDamage() {
+                this.health -= 10;
+                if (this.health <= 0) return true;
+                return false;
+            }
+        }
+
+        class BossEnemy {
+            constructor() {
+                this.width = 100;
+                this.height = 60;
+                this.x = canvas.width;
+                this.y = Math.random() * (canvas.height - this.height);
+                this.speed = 2;
+                this.health = 50;
+                this.bullets = [];
+            }
+            draw() {
+                this.x -= this.speed;
+                ctx.fillStyle = "purple";
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                this.bullets.forEach(bullet => bullet.draw());
+            }
+            shoot() {
+                this.bullets.push(new Bullet(this.x, this.y + this.height / 2, -4));
+            }
+            takeDamage() {
+                this.health -= 20;
+                if (this.health <= 0) return true;
+                return false;
+            }
+        }
+
+        const player = new Player();
+        let enemies = [];
+        let bosses = [];
+        let score = 0;
+
+        function spawnEnemy() {
+            let enemy = new Enemy();
+            enemies.push(enemy);
+            setInterval(() => enemy.shoot(), 6000);  // Enemies shoot every second
+        }
+
+        function spawnBoss() {
+            let boss = new BossEnemy();
+            bosses.push(boss);
+            setInterval(() => boss.shoot(), 1500);  // Bosses shoot every 1.5 seconds
+        }
+
+        setInterval(spawnEnemy, 2000);
+        setInterval(spawnBoss, 10000);
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            player.draw();
+
+            // Draw enemies and check for collisions
+            enemies.forEach((enemy, index) => {
+                enemy.draw();
+                if (enemy.x + enemy.width < 0) enemies.splice(index, 1);
+                player.bullets.forEach((bullet, bIndex) => {
+                    if (
+                        bullet.x + bullet.width > enemy.x &&
+                        bullet.x < enemy.x + enemy.width &&
+                        bullet.y + bullet.height > enemy.y &&
+                        bullet.y < enemy.y + enemy.height
+                    ) {
+                        if (enemy.takeDamage()) {
+                            enemies.splice(index, 1);
+                            score += 10;
+                        }
+                        player.bullets.splice(bIndex, 1);
+                    }
+                });
+            });
+
+            // Draw bosses and check for collisions
+            bosses.forEach((boss, bIndex) => {
+                boss.draw();
+                if (boss.x + boss.width < 0) bosses.splice(bIndex, 1);
+                player.bullets.forEach((bullet, bIndex) => {
+                    if (
+                        bullet.x + bullet.width > boss.x &&
+                        bullet.x < boss.x + boss.width &&
+                        bullet.y + bullet.height > boss.y &&
+                        bullet.y < boss.y + boss.height
+                    ) {
+                        if (boss.takeDamage()) {
+                            bosses.splice(bIndex, 1);
+                            score += 50;
+                        }
+                        player.bullets.splice(bIndex, 1);
+                    }
+                });
+            });
+
+            // Check if player is hit by enemy or boss bullets
+            enemies.forEach(enemy => {
+                enemy.bullets.forEach((bullet, bIndex) => {
+                    if (
+                        bullet.x + bullet.width > player.x &&
+                        bullet.x < player.x + player.width &&
+                        bullet.y + bullet.height > player.y &&
+                        bullet.y < player.y + player.height
+                    ) {
+                        player.health -= 10;
+                        enemy.bullets.splice(bIndex, 1);
+                    }
+                });
+            });
+
+            bosses.forEach(boss => {
+                boss.bullets.forEach((bullet, bIndex) => {
+                    if (
+                        bullet.x + bullet.width > player.x &&
+                        bullet.x < player.x + player.width &&
+                        bullet.y + bullet.height > player.y &&
+                        bullet.y < player.y + player.height
+                    ) {
+                        player.health -= 20;
+                        boss.bullets.splice(bIndex, 1);
+                    }
+                });
+            });
+
+            // Display score and health
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Score: ${score}`, 10, 30);
+            ctx.fillText(`Health: ${player.health}`, 10, 60);
+
+            // Check if game over
+            if (player.health <= 0) {
+                gameOver();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            alert("Game Over! Final Score: " + score);
+            location.reload();
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowUp") player.move("up");
+            if (event.key === "ArrowDown") player.move("down");
+            if (event.key === " ") player.shoot();
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>

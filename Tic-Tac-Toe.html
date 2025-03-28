@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 5px; margin: 20px auto; width: 320px; }
+        .cell {
+            width: 100px; height: 100px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2em; background-color: #f0f0f0;
+            cursor: pointer; border: 2px solid black;
+        }
+        .cell.taken { cursor: not-allowed; }
+        #status { font-size: 1.5em; margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Tic-Tac-Toe</h1>
+    <div>
+        <button onclick="setMode('human')">Play with a Friend</button>
+        <button onclick="setMode('ai')">Play Against AI</button>
+    </div>
+    <div id="status">Choose a mode to start</div>
+    <div class="board" id="board"></div>
+    <button onclick="resetGame()">Restart Game</button>
+    
+    <script>
+        const board = document.getElementById("board");
+        const status = document.getElementById("status");
+        let currentPlayer = "X";
+        let gameBoard = ["", "", "", "", "", "", "", "", ""];
+        let gameMode = "human"; // Default mode
+        
+        function setMode(mode) {
+            gameMode = mode;
+            resetGame();
+            status.textContent = `Player X's Turn`;
+        }
+        
+        function createBoard() {
+            board.innerHTML = "";
+            gameBoard.forEach((cell, index) => {
+                const div = document.createElement("div");
+                div.classList.add("cell");
+                div.dataset.index = index;
+                div.textContent = cell;
+                div.addEventListener("click", handleMove);
+                board.appendChild(div);
+            });
+        }
+        
+        function handleMove(event) {
+            const index = event.target.dataset.index;
+            if (gameBoard[index] === "") {
+                gameBoard[index] = currentPlayer;
+                event.target.textContent = currentPlayer;
+                event.target.classList.add("taken");
+                if (checkWin()) {
+                    status.textContent = `Player ${currentPlayer} Wins!`;
+                    disableBoard();
+                } else if (gameBoard.every(cell => cell !== "")) {
+                    status.textContent = "It's a Draw!";
+                } else {
+                    currentPlayer = currentPlayer === "X" ? "O" : "X";
+                    status.textContent = `Player ${currentPlayer}'s Turn`;
+                    if (gameMode === "ai" && currentPlayer === "O") {
+                        setTimeout(aiMove, 500);
+                    }
+                }
+            }
+        }
+        
+        function aiMove() {
+            let emptyCells = gameBoard.map((cell, index) => cell === "" ? index : null).filter(index => index !== null);
+            let randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            gameBoard[randomIndex] = "O";
+            document.querySelector(`.cell[data-index='${randomIndex}']`).textContent = "O";
+            document.querySelector(`.cell[data-index='${randomIndex}']`).classList.add("taken");
+            if (checkWin()) {
+                status.textContent = "AI Wins!";
+                disableBoard();
+            } else if (gameBoard.every(cell => cell !== "")) {
+                status.textContent = "It's a Draw!";
+            } else {
+                currentPlayer = "X";
+                status.textContent = "Player X's Turn";
+            }
+        }
+        
+        function checkWin() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            return winPatterns.some(pattern => 
+                pattern.every(index => gameBoard[index] === currentPlayer)
+            );
+        }
+        
+        function disableBoard() {
+            document.querySelectorAll(".cell").forEach(cell => cell.removeEventListener("click", handleMove));
+        }
+        
+        function resetGame() {
+            gameBoard = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            status.textContent = "Player X's Turn";
+            createBoard();
+        }
+        
+        createBoard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #ffebee;
+        }
+
+        input, select {
+            margin: 10px;
+            padding: 10px 15px;
+            border: none;
+            background: #e91e63;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            width: 400px;
+            border: 2px solid black;
+            position: relative;
+        }
+
+        .square {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            position: relative;
+        }
+
+        .dark {
+            background-color: #769656;
+        }
+
+        .light {
+            background-color: #eeeed2;
+        }
+
+        .piece {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            cursor: grab;
+        }
+
+        .highlight {
+            background-color: yellow !important;
+        }
+
+        .captured-container {
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .captured-pieces {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chess Game</h1>
+    <label for="difficulty">AI Difficulty:</label>
+    <select id="difficulty">
+        <option value="1">Easy</option>
+        <option value="2">Medium</option>
+        <option value="3">Hard</option>
+    </select>
+    <div id="container">
+        <div class="captured-container">
+            <h3>Black Captured</h3>
+            <div id="captured-black" class="captured-pieces"></div>
+        </div>
+        <div id="chessboard"></div>
+        <div class="captured-container">
+            <h3>White Captured</h3>
+            <div id="captured-white" class="captured-pieces"></div>
+        </div>
+    </div>
+    <p id="status"></p>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const game = new Chess();
+            const boardElement = document.getElementById("chessboard");
+            const capturedWhite = document.getElementById("captured-white");
+            const capturedBlack = document.getElementById("captured-black");
+            const difficultySelect = document.getElementById("difficulty");
+            let selectedSquare = null;
+            
+            const pieceIcons = {
+                p: "\uf443", r: "\uf447", n: "\uf441", b: "\uf43a", q: "\uf445", k: "\uf43f",
+                P: "\uf443", R: "\uf447", N: "\uf441", B: "\uf43a", Q: "\uf445", K: "\uf43f"
+            };
+
+            function createBoard() {
+                boardElement.innerHTML = "";
+                const board = game.board();
+                board.forEach((row, rowIndex) => {
+                    row.forEach((square, colIndex) => {
+                        const squareElement = document.createElement("div");
+                        squareElement.classList.add("square", (rowIndex + colIndex) % 2 === 0 ? "light" : "dark");
+                        squareElement.dataset.position = `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`;
+
+                        if (square) {
+                            squareElement.innerHTML = `<i class="fa piece">${pieceIcons[square.type]}</i>`;
+                            squareElement.style.color = square.color === "w" ? "white" : "black";
+                        }
+
+                        squareElement.addEventListener("click", () => handleMove(squareElement));
+                        boardElement.appendChild(squareElement);
+                    });
+                });
+                updateStatus();
+            }
+
+            function handleMove(squareElement) {
+                const position = squareElement.dataset.position;
+                document.querySelectorAll(".square").forEach(sq => sq.classList.remove("highlight"));
+                squareElement.classList.add("highlight");
+                
+                if (!selectedSquare) {
+                    selectedSquare = position;
+                } else {
+                    const move = game.move({ from: selectedSquare, to: position, promotion: "q" });
+                    if (move) {
+                        updateCaptured(move.captured, move.color);
+                        createBoard();
+                        setTimeout(makeAIMove, 500);
+                    }
+                    selectedSquare = null;
+                }
+            }
+
+            function updateCaptured(piece, color) {
+                if (!piece) return;
+                const capturedContainer = color === "w" ? capturedWhite : capturedBlack;
+                const pieceElement = document.createElement("i");
+                pieceElement.classList.add("fa", "piece");
+                pieceElement.innerHTML = pieceIcons[piece];
+                capturedContainer.appendChild(pieceElement);
+            }
+
+            function makeAIMove() {
+                if (game.game_over()) return;
+                const moves = game.moves();
+                let bestMove = moves[Math.floor(Math.random() * moves.length)];
+                if (difficultySelect.value === "3") bestMove = moves[moves.length - 1];
+                game.move(bestMove);
+                createBoard();
+            }
+
+            function updateStatus() {
+                document.getElementById("status").textContent = game.turn() === "w" ? "White to move" : "Black to move";
+            }
+
+            createBoard();
+        });
+    </script>
+</body>
+</html>
