@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add Movie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Add Movie to Wishlist</h1>
+    <form id="movieForm">
+        <input type="text" id="title" placeholder="Movie Title" required><br>
+        <input type="text" id="genre" placeholder="Genre"><br>
+        <input type="number" id="year" placeholder="Year"><br>
+        <button type="submit">Add to Wishlist</button>
+    </form>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js';
+        import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADoiDHmhppQwDbODuP40yPItKcfmQiecw",
+            authDomain: "ntando-20fad.firebaseapp.com",
+            databaseURL: "https://ntando-20fad-default-rtdb.firebaseio.com",
+            projectId: "ntando-20fad",
+            storageBucket: "ntando-20fad.appspot.com",
+            messagingSenderId: "364824349175",
+            appId: "1:364824349175:web:9b3b799b818f7def3fc6f2"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        document.getElementById("movieForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const title = document.getElementById("title").value.trim();
+            const genre = document.getElementById("genre").value.trim();
+            const year = document.getElementById("year").value;
+
+            set(ref(db, 'movies/wishlist/' + title), {
+                title, genre, year
+            });
+
+            alert("Movie added to wishlist!");
+            e.target.reset();
+        });
+    </script>
+</body>
+
+</html>

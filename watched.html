@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Watched Movies</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Watched Movies</h1>
+    <ul id="watchedList"></ul>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js';
+        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADoiDHmhppQwDbODuP40yPItKcfmQiecw",
+            authDomain: "ntando-20fad.firebaseapp.com",
+            databaseURL: "https://ntando-20fad-default-rtdb.firebaseio.com",
+            projectId: "ntando-20fad",
+            storageBucket: "ntando-20fad.appspot.com",
+            messagingSenderId: "364824349175",
+            appId: "1:364824349175:web:9b3b799b818f7def3fc6f2"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const list = document.getElementById("watchedList");
+        const watchedRef = ref(db, 'movies/watched');
+
+        get(watchedRef).then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                for (const key in data) {
+                    const li = document.createElement("li");
+                    const stars = '★'.repeat(data[key].rating) + '☆'.repeat(5 - data[key].rating);
+                    li.innerHTML = `<strong>${data[key].title}</strong><br>${data[key].review}<br>Rating: ${stars}`;
+                    list.appendChild(li);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

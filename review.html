@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Review Movie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Review Movie</h1>
+    <form id="reviewForm">
+        <input type="text" id="title" readonly><br>
+        <textarea id="review" placeholder="Your review" required></textarea><br>
+        <label>Rating:
+            <select id="rating">
+                <option value="1">★☆☆☆☆</option>
+                <option value="2">★★☆☆☆</option>
+                <option value="3">★★★☆☆</option>
+                <option value="4">★★★★☆</option>
+                <option value="5">★★★★★</option>
+            </select>
+        </label><br>
+        <button type="submit">Submit Review</button>
+    </form>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js';
+        import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADoiDHmhppQwDbODuP40yPItKcfmQiecw",
+            authDomain: "ntando-20fad.firebaseapp.com",
+            databaseURL: "https://ntando-20fad-default-rtdb.firebaseio.com",
+            projectId: "ntando-20fad",
+            storageBucket: "ntando-20fad.appspot.com",
+            messagingSenderId: "364824349175",
+            appId: "1:364824349175:web:9b3b799b818f7def3fc6f2"
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieTitle = urlParams.get("movie");
+        document.getElementById("title").value = movieTitle;
+
+        document.getElementById("reviewForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const review = document.getElementById("review").value.trim();
+            const rating = parseInt(document.getElementById("rating").value);
+
+            set(ref(db, 'movies/watched/' + movieTitle), {
+                title: movieTitle, review, rating
+            });
+
+            alert("Review submitted!");
+            window.location.href = "watched.html";
+        });
+    </script>
+</body>
+
+</html>

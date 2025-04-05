@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wishlist</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Movies Wishlist</h1>
+    <ul id="wishlist"></ul>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js';
+        import { getDatabase, ref, get, remove } from 'https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADoiDHmhppQwDbODuP40yPItKcfmQiecw",
+            authDomain: "ntando-20fad.firebaseapp.com",
+            databaseURL: "https://ntando-20fad-default-rtdb.firebaseio.com",
+            projectId: "ntando-20fad",
+            storageBucket: "ntando-20fad.appspot.com",
+            messagingSenderId: "364824349175",
+            appId: "1:364824349175:web:9b3b799b818f7def3fc6f2"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const list = document.getElementById("wishlist");
+        const wishlistRef = ref(db, 'movies/wishlist');
+
+        get(wishlistRef).then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                for (const key in data) {
+                    const li = document.createElement("li");
+                    li.innerHTML = `${data[key].title} (${data[key].year || ''}) - ${data[key].genre || ''} 
+            <button onclick="markAsWatched('${data[key].title}')">Watched</button>`;
+                    list.appendChild(li);
+                }
+            }
+        });
+
+        window.markAsWatched = (title) => {
+            remove(ref(db, 'movies/wishlist/' + title)).then(() => {
+                window.location.href = `review.html?movie=${encodeURIComponent(title)}`;
+            });
+        };
+    </script>
+</body>
+</html>
