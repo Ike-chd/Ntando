@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #ffebee;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            border: none;
+            background: #e91e63;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            color: black;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #d81b60;
+        }
+
+        .task-container {
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            background: #f4f4f4;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="task-container">
+        <h2>Task Manager</h2>
+
+        <div>
+            <input type="text" id="taskInput" placeholder="Enter task" />
+            <input type="date" id="taskDate" onchange="loadTasksByDate()" />
+            <button onclick="addTask()">Add Task</button>
+        </div>
+
+        <div>
+            <label for="dateDropdown">View Tasks by Date:</label>
+            <select id="dateDropdown" onchange="onDateDropdownChange()">
+                <option value="">-- Select Date --</option>
+            </select>
+        </div>
+
+        <div class="task-list" id="taskList"></div>
+    </div>
+    <!-- Keep everything else the same until the <script> tag -->
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import {
+            getDatabase, ref, push, set, get, update, remove
+        } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADoiDHmhppQwDbODuP40yPItKcfmQiecw",
+            authDomain: "ntando-20fad.firebaseapp.com",
+            databaseURL: "https://ntando-20fad-default-rtdb.firebaseio.com",
+            projectId: "ntando-20fad",
+            storageBucket: "ntando-20fad.appspot.com",
+            messagingSenderId: "364824349175",
+            appId: "1:364824349175:web:9b3b799b818f7def3fc6f2",
+            measurementId: "G-JCNMTJRV4W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Add task
+        window.addTask = async function () {
+            const taskText = document.getElementById("taskInput").value;
+            const taskDate = document.getElementById("taskDate").value;
+
+            if (taskText === "" || taskDate === "") {
+                alert("Please enter both a task and a date");
+                return;
+            }
+
+            const dateRef = ref(db, 'tasks/' + taskDate);
+            const newTaskRef = push(dateRef);
+            await set(newTaskRef, {
+                text: taskText,
+                createdAt: new Date().toISOString(),
+                done: false
+            });
+
+            document.getElementById("taskInput").value = "";
+            await loadTasksByDate();
+            await populateDateDropdown();
+        };
+
+        // Load tasks for selected date
+        window.loadTasksByDate = async function () {
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+
+            const taskDate = document.getElementById("taskDate").value;
+            if (!taskDate) return;
+
+            const dateRef = ref(db, 'tasks/' + taskDate);
+            const snapshot = await get(dateRef);
+            if (snapshot.exists()) {
+                const tasks = snapshot.val();
+                for (const key in tasks) {
+                    const task = tasks[key];
+                    const created = new Date(task.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    const taskItem = document.createElement("div");
+                    taskItem.className = "task-item";
+                    taskItem.innerHTML = `
+            <div class="task-header">
+              <div>
+                <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone('${taskDate}', '${key}', this.checked)" />
+                <span contenteditable="false" id="taskText-${key}" style="${task.done ? 'text-decoration: line-through;' : ''}">
+                  <strong>${task.text}</strong>
+                </span>
+                <small>(${created})</small>
+              </div>
+              <div>
+                <button onclick="editTask('${taskDate}', '${key}')">✏️</button>
+                <button onclick="deleteTask('${taskDate}', '${key}')">🗑️</button>
+              </div>
+            </div>
+          `;
+                    taskList.appendChild(taskItem);
+                }
+            } else {
+                taskList.innerHTML = "<i>No tasks for this date.</i>";
+            }
+        };
+
+        // Toggle task done status
+        window.toggleDone = async function (date, taskId, isChecked) {
+            const taskRef = ref(db, `tasks/${date}/${taskId}`);
+            await update(taskRef, { done: isChecked });
+            await loadTasksByDate();
+        };
+
+        // Edit task
+        window.editTask = function (date, taskId) {
+            const textSpan = document.getElementById(`taskText-${taskId}`);
+            const isEditing = textSpan.isContentEditable;
+
+            if (!isEditing) {
+                textSpan.contentEditable = true;
+                textSpan.focus();
+            } else {
+                const newText = textSpan.innerText.trim();
+                if (newText === "") {
+                    alert("Task text cannot be empty.");
+                    return;
+                }
+
+                const taskRef = ref(db, `tasks/${date}/${taskId}`);
+                update(taskRef, { text: newText });
+                textSpan.contentEditable = false;
+                loadTasksByDate();
+            }
+        };
+
+        // Delete task
+        window.deleteTask = async function (date, taskId) {
+            const taskRef = ref(db, `tasks/${date}/${taskId}`);
+            await remove(taskRef);
+            await loadTasksByDate();
+        };
+
+        // Populate dropdown with available task dates
+        async function populateDateDropdown() {
+            const dropdown = document.getElementById("dateDropdown");
+            const rootRef = ref(db, 'tasks');
+            const snapshot = await get(rootRef);
+            dropdown.innerHTML = `<option value="">-- Select Date --</option>`;
+            if (snapshot.exists()) {
+                const dates = Object.keys(snapshot.val());
+                dates.sort().reverse();
+                dates.forEach(date => {
+                    const option = document.createElement("option");
+                    option.value = date;
+                    option.textContent = date;
+                    dropdown.appendChild(option);
+                });
+            }
+        }
+
+        // On dropdown change
+        window.onDateDropdownChange = function () {
+            const selected = document.getElementById("dateDropdown").value;
+            if (selected) {
+                document.getElementById("taskDate").value = selected;
+                loadTasksByDate();
+            }
+        };
+
+        // Init on load
+        populateDateDropdown();
+
+        // If URL has ?date=YYYY-MM-DD, set input and disable it
+        const urlParams = new URLSearchParams(window.location.search);
+        const prefillDate = urlParams.get('date');
+        if (prefillDate) {
+            const dateInput = document.getElementById("taskDate");
+            dateInput.value = prefillDate;
+            dateInput.disabled = true;
+        }
+
+    </script>
+
+
+</body>
+
+</html>

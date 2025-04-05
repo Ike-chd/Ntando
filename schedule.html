@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Schedule</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #ffebee;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .day {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 50px 25px;
+            background-color: #ffffff;
+            box-sizing: border-box;
+            border: 1px solid #d2d2d3;
+            border-radius: 5px;
+            box-shadow: 0 6px 7px -4px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            border: none;
+            background: #e91e63;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #d81b60;
+        }
+
+        .task-container {
+            max-width: 400px;
+            margin: auto;
+        }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            background: #f4f4f4;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .week-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .current-day {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="week-container">
+        <button onclick="changeWeek(-1)">Prev Week</button>
+        <button onclick="changeWeek(1)">Next Week</button>
+        <div class="cards" id="cards"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADoiDHmhppQwDbODuP40yPItKcfmQiecw",
+            authDomain: "ntando-20fad.firebaseapp.com",
+            databaseURL: "https://ntando-20fad-default-rtdb.firebaseio.com",
+            projectId: "ntando-20fad",
+            storageBucket: "ntando-20fad.appspot.com",
+            messagingSenderId: "364824349175",
+            appId: "1:364824349175:web:9b3b799b818f7def3fc6f2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentDate = new Date();
+        let currentWeekStart = new Date();
+        currentWeekStart.setDate(currentDate.getDate() - currentDate.getDay());
+
+        function formatDate(date) {
+            return date.toISOString().split("T")[0];
+        }
+
+        async function listWeekDays() {
+            let weekDaysContainer = document.getElementById('cards');
+            weekDaysContainer.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                let day = new Date(currentWeekStart);
+                day.setDate(day.getDate() + i);
+                let dateStr = formatDate(day);
+
+                let dayElement = document.createElement('div');
+                dayElement.className = 'day';
+                if (day.toDateString() === currentDate.toDateString()) {
+                    dayElement.classList.add('current-day');
+                }
+
+                let heading = document.createElement('h3');
+                heading.textContent = day.toDateString();
+                dayElement.appendChild(heading);
+
+                let addBtn = document.createElement('button');
+                addBtn.textContent = "Add Task";
+                addBtn.onclick = () => {
+                    window.location.href = `tasks.html?date=${dateStr}`;
+                };
+                dayElement.appendChild(addBtn);
+
+                const tasksRef = ref(db, `tasks/${dateStr}`);
+                const snapshot = await get(tasksRef);
+                if (snapshot.exists()) {
+                    const tasks = snapshot.val();
+                    const ul = document.createElement('ul');
+                    for (const key in tasks) {
+                        const li = document.createElement('li');
+                        li.textContent = tasks[key].text;
+                        ul.appendChild(li);
+                    }
+                    dayElement.appendChild(ul);
+                } else {
+                    const noTasks = document.createElement('p');
+                    noTasks.innerHTML = "<i>No tasks</i>";
+                    dayElement.appendChild(noTasks);
+                }
+
+                weekDaysContainer.appendChild(dayElement);
+            }
+        }
+
+        window.changeWeek = function (offset) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (offset * 7));
+            listWeekDays();
+        }
+
+        listWeekDays();
+    </script>
+
+    <script>
+        function addTask() {
+            let taskText = document.getElementById('taskInput').value;
+            let taskDate = document.getElementById('taskDate').value;
+
+            if (taskText === '' || taskDate === '') {
+                alert('Please enter both a task and a date');
+                return;
+            }
+
+            let taskList = document.getElementById('taskList');
+            let taskItem = document.createElement('div');
+            taskItem.className = 'task-item';
+            taskItem.innerHTML = `<strong>${taskText}</strong> - ${taskDate}`;
+
+            taskList.appendChild(taskItem);
+
+            document.getElementById('taskInput').value = '';
+            document.getElementById('taskDate').value = '';
+        }
+
+        let currentDate1 = new Date();
+        let currentWeekStart1 = new Date();
+        currentWeekStart1.setDate(currentDate1.getDate() - currentDate1.getDay());
+
+        function listWeekDays() {
+            let weekDaysContainer = document.getElementsByClassName('cards')[0];
+            weekDaysContainer.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                let day = new Date(currentWeekStart1);
+                day.setDate(day.getDate() + i);
+                let dayElement = document.createElement('div');
+                dayElement.className = 'day';
+                dayElement.textContent = day.toDateString();
+
+                if (day.toDateString() === currentDate1.toDateString()) {
+                    dayElement.classList.add('current-day');
+                }
+
+                weekDaysContainer.appendChild(dayElement);
+            }
+        }
+
+        function changeWeek(offset) {
+            currentWeekStart1.setDate(currentWeekStart1.getDate() + (offset * 7));
+            listWeekDays();
+        }
+
+        listWeekDays();
+    </script>
+</body>
+
+</html>
